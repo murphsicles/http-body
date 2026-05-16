@@ -1,0 +1,96 @@
+// http-body/src/frame.z — HTTP body frame types
+//
+// A Frame represents an individual chunk of data in a streaming body,
+// or a set of trailers sent at the end of the stream.
+
+// A frame of an HTTP stream (body).
+// Can be either a DATA frame (containing body data) or a TRAILERS frame
+// (containing final headers for HTTP/2).
+struct Frame<T> {
+    kind: FrameKind<T>,
+}
+
+enum FrameKind<T> {
+    Data(T),
+    Trailers(HeaderMap),
+}
+
+impl<T> Frame<T> {
+    // Create a DATA frame with the provided data buffer
+    fn data(buf: T) -> Frame<T> {
+        return Frame { kind: FrameKind::Data(buf) };
+    }
+
+    // Create a TRAILERS frame
+    fn trailers(map: HeaderMap) -> Frame<T> {
+        return Frame { kind: FrameKind::Trailers(map) };
+    }
+
+    // Transform the data in this frame using a mapping function
+    fn map_data<F, D>(self, f: F) -> Frame<D> {
+        match self.kind {
+            FrameKind::Data(data) => {
+                return Frame { kind: FrameKind::Data(f(data)) };
+            }
+            FrameKind::Trailers(t) => {
+                return Frame { kind: FrameKind::Trailers(t) };
+            }
+        }
+    }
+
+    // Returns true if this is a DATA frame
+    fn is_data(&self) -> bool {
+        return match self.kind {
+            FrameKind::Data(..) => true,
+            _ => false,
+        };
+    }
+
+    // Consume self and return the data buffer (if DATA frame)
+    fn into_data(self) -> Result<T, Frame<T>> {
+        match self.kind {
+            FrameKind::Data(data) => return Result::Ok(data),
+            _ => return Result::Err(self),
+        }
+    }
+
+    // Borrow the data (if DATA frame)
+    fn data_ref(&self) -> &T {
+        match self.kind {
+            FrameKind::Data(ref data) => return data,
+            _ => return null,  // none
+        }
+    }
+
+    // Returns true if this is a TRAILERS frame
+    fn is_trailers(&self) -> bool {
+        return match self.kind {
+            FrameKind::Trailers(..) => true,
+            _ => false,
+        };
+    }
+
+    // Consume self and return the trailers (if TRAILERS frame)
+    fn into_trailers(self) -> Result<HeaderMap, Frame<T>> {
+        match self.kind {
+            FrameKind::Trailers(map) => return Result::Ok(map),
+            _ => return Result::Err(self),
+        }
+    }
+
+    // Borrow the trailers (if TRAILERS frame)
+    fn trailers_ref(&self) -> &HeaderMap {
+        match self.kind {
+            FrameKind::Trailers(ref t) => return t,
+            _ => return null,
+        }
+    }
+
+    // Mutably borrow the trailers (if TRAILERS frame)
+    fn trailers_mut(&mut self) -> &mut HeaderMap {
+        match self.kind {
+            FrameKind::Trailers(ref mut t) => return t,
+            _ => return null,
+        }
+    }
+}

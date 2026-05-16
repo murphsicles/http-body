@@ -1,0 +1,14 @@
+// http-body/src/lib.z — HTTP body streaming trait for Zeta
+//
+// Port of hyperium/http-body v1.0.1
+//
+// Provides the Body trait for streaming HTTP request/response bodies,
+// along with Frame and SizeHint types.
+//
+// The Body trait is the core abstraction. It yields Frame<Data> values
+// via poll_frame(), where each frame is either a DATA buffer or a
+// TRAILERS map (for HTTP/2 trailing headers).
+
+pub use body::{Body, Poll, Context};
+pub use frame::Frame;
+pub use size_hint::SizeHint;

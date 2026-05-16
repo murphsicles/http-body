@@ -1,0 +1,10 @@
+[package]
+name = "@net/http-body"
+version = "1.0.1"
+edition = "2026"
+authors = ["The Zeta Foundation <team@z-lang.org>"]
+description = "Streaming HTTP body trait for Zeta — Body trait, Frame, SizeHint"
+license = "MIT"
+repository = "https://github.com/murphsicles/http-body"
+keywords = ["http", "body", "streaming", "request", "response"]
+categories = ["web-programming::http"]

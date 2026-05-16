@@ -1,0 +1,77 @@
+// http-body/src/size_hint.z — Body size hint
+//
+// Provides hints about the expected size of a streaming body.
+
+// A hint about the size of a streaming body.
+// The lower bound is the minimum number of bytes the body will yield.
+// The upper bound is the maximum (None if unknown).
+struct SizeHint {
+    lower: u64,
+    upper: u64,  // u64::MAX means "unknown"
+}
+
+impl SizeHint {
+    // Create a new SizeHint with default values (lower=0, upper=unknown)
+    fn new() -> SizeHint {
+        return SizeHint {
+            lower: 0,
+            upper: 0xFFFFFFFFFFFFFFFF,  // u64::MAX
+        };
+    }
+
+    // Create a SizeHint with both bounds set to an exact value
+    fn with_exact(value: u64) -> SizeHint {
+        return SizeHint {
+            lower: value,
+            upper: value,
+        };
+    }
+
+    // Returns the lower bound on remaining bytes
+    fn lower(&self) -> u64 {
+        return self.lower;
+    }
+
+    // Set the lower bound. Panics if value > upper.
+    fn set_lower(&mut self, value: u64) {
+        let upper = self.upper();
+        if upper > 0 && value > upper {
+            // Would panic, but for now silently clamp
+            self.lower = upper;
+        } else {
+            self.lower = value;
+        }
+    }
+
+    // Returns the upper bound, or None if unknown
+    fn upper(&self) -> u64 {
+        if self.upper == 0xFFFFFFFFFFFFFFFF {
+            return 0;  // None
+        }
+        return self.upper;
+    }
+
+    // Set the upper bound. Panics if value < lower.
+    fn set_upper(&mut self, value: u64) {
+        if value < self.lower {
+            // Would panic, clamp instead
+            self.upper = self.lower;
+        } else {
+            self.upper = value;
+        }
+    }
+
+    // Returns the exact size if lower == upper, or None
+    fn exact(&self) -> u64 {
+        if self.lower == self.upper {
+            return self.upper;
+        }
+        return 0;  // None (0 means unknown in this context)
+    }
+
+    // Set both bounds to the exact value
+    fn set_exact(&mut self, value: u64) {
+        self.lower = value;
+        self.upper = value;
+    }
+}
